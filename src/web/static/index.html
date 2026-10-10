@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Шахматы 12×12</title>
+  <link rel="icon" href="/images/pieces/wN2.png">
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="module" src="/static/js/main.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" id="brand">Шахматы 12×12</a>
+    <span class="conn" id="conn" hidden>Нет связи с сервером, переподключаемся…</span>
+    <span class="me" id="me"></span>
+    <button type="button" class="ghost small" id="rules-btn">Правила</button>
+  </header>
+
+  <main>
+    <!-- Имя -->
+    <section id="name-screen" class="card narrow" hidden>
+      <h1>Как вас зовут?</h1>
+      <form id="name-form" class="row">
+        <input id="name-input" maxlength="24" placeholder="Имя" autocomplete="nickname" required>
+        <button type="submit" class="primary">Продолжить</button>
+      </form>
+    </section>
+
+    <!-- Лобби -->
+    <section id="lobby" hidden>
+      <div class="card">
+        <h2>Новая игра</h2>
+        <div class="row wrap">
+          <div class="segmented" id="color-choice" role="radiogroup" aria-label="Цвет">
+            <button type="button" data-color="w" role="radio">Белые</button>
+            <button type="button" data-color="random" role="radio" class="on">Случайно</button>
+            <button type="button" data-color="b" role="radio">Чёрные</button>
+          </div>
+          <button type="button" class="primary" id="create-btn">Создать игру</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Игры <span class="muted" id="online"></span></h2>
+        <ul class="games" id="games"></ul>
+        <p class="muted" id="no-games">Пока никто не играет — создайте игру и отправьте ссылку другу.</p>
+      </div>
+    </section>
+
+    <!-- Партия -->
+    <section id="game" hidden>
+      <div class="game-head">
+        <button type="button" class="ghost" id="to-lobby">← Лобби</button>
+        <span class="status" id="status"></span>
+        <button type="button" class="ghost" id="copy-link">Скопировать ссылку</button>
+      </div>
+      <div class="game-layout">
+        <div class="board-col">
+          <div class="player" id="player-top"></div>
+          <div class="board-wrap">
+            <div id="board" class="board"></div>
+            <div class="overlay" id="overlay" hidden></div>
+          </div>
+          <div class="player" id="player-bottom"></div>
+          <div class="hint" id="hint"></div>
+          <div class="request" id="request" hidden></div>
+        </div>
+        <div class="controls" id="controls">
+          <button type="button" class="ctrl" id="btn-resign"><img src="/images/pieces/resign.png" alt=""><span>Сдаться</span></button>
+          <button type="button" class="ctrl" id="btn-draw"><img src="/images/pieces/draw.png" alt=""><span>Ничья</span></button>
+          <button type="button" class="ctrl" id="btn-takeback"><img src="/images/pieces/back.png" alt=""><span>Вернуть ход</span></button>
+          <button type="button" class="ctrl" id="btn-flip"><img src="/images/pieces/180.png" alt=""><span>Перевернуть</span></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="rules" class="rules">
+    <div class="rules-head">
+      <h2>Правила</h2>
+      <button type="button" class="ghost small" id="rules-close" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="rules-body">
+      <p>Доска 12×12. Белые ходят первыми, дальше по очереди. Цель — поставить мат королю соперника:
+        король под ударом (шах), и любой ход оставляет его под ударом. Нажмите на свою фигуру —
+        на доске появятся все её ходы.</p>
+
+      <h3>Фигуры</h3>
+      <ul class="pieces" id="rules-pieces"></ul>
+
+      <h3>Пешка подробнее</h3>
+      <ul>
+        <li>Первым ходом идёт вперёд на 1, 2 или 3 клетки, потом — на 1 или 2. Клетки на пути должны быть свободны.</li>
+        <li>Бьёт только по диагонали вперёд на одну клетку.</li>
+        <li><b>Взятие на проходе:</b> если пешка соперника прошла несколько клеток и проскочила поле,
+          которое бьёт ваша пешка, — сразу следующим ходом можно встать на это поле и забрать её.</li>
+        <li><b>Превращение:</b> дойдя до последней горизонтали, пешка превращается в ферзя, ладью, слона или коня — на выбор.</li>
+      </ul>
+
+      <h3>Рокировка-обмен</h3>
+      <p>Вместо хода можно поменять местами две свои фигуры (пешки не участвуют):</p>
+      <ul>
+        <li><b>Конь и орёл</b> меняются с любой своей фигурой, на которую могли бы прыгнуть.</li>
+        <li><b>Остальные</b> — со своей фигурой, которую бьют, если между ними пусто.</li>
+        <li><b>Король</b> — только стоя на своей первой горизонтали и только с фигурой на той же горизонтали.
+          Нельзя, если король под шахом или если поля между ними и поле партнёра под ударом.</li>
+        <li>Обмен, после которого ваш король оказывается под шахом, запрещён.</li>
+      </ul>
+
+      <h3>Подсказки на доске</h3>
+      <ul class="legend">
+        <li><span class="lg move"></span> обычный ход</li>
+        <li><span class="lg capture"></span> взятие фигуры</li>
+        <li><span class="lg ep"></span> взятие на проходе</li>
+        <li><span class="lg double"></span> двойной ход гепарда</li>
+        <li><span class="lg castle"></span> рокировка-обмен</li>
+        <li><span class="lg check"></span> король под шахом</li>
+      </ul>
+
+      <h3>Конец партии</h3>
+      <ul>
+        <li><b>Мат</b> — победа.</li>
+        <li><b>Сдаться</b> — кнопка с флагом (нажать два раза).</li>
+        <li><b>Ничья</b> — когда оба игрока нажали «Ничья», или если тому, кто ходит, некуда ходить, а шаха нет (пат).</li>
+        <li><b>Вернуть ход</b> — отменяет последний ход, если соперник согласится.</li>
+      </ul>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" hidden></div>
+</body>
+</html>
