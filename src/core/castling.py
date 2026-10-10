@@ -4,7 +4,15 @@ from core.board import KING_BACK_ROW
 from core.attacks import is_square_attacked, is_square_attacked_by_piece
 
 
+def is_aligned(c1, r1, c2, r2):
+    return c1 == c2 or r1 == r2 or abs(c1 - c2) == abs(r1 - r2)
+
+
 def is_path_clear(position, c1, r1, c2, r2):
+    # Не на одной линии — значит, бьёт конь или орёл: они прыгают, путь не нужен.
+    # (Без этой проверки цикл ниже никогда не доходил до цели и зависал.)
+    if not is_aligned(c1, r1, c2, r2):
+        return True
     dc = (c2 > c1) - (c2 < c1)
     dr = (r2 > r1) - (r2 < r1)
     nc, nr = c1 + dc, r1 + dr

@@ -1,5 +1,7 @@
 """Правила ходов (core.moves / attacks / castling / legal)."""
 
+import threading
+
 from core.board import initial_position
 from core.moves import get_moves, eagle_moves, cheetah_moves, genie_moves
 from core.attacks import is_square_attacked, is_in_check
@@ -93,10 +95,26 @@ def test_back_rank_mate():
     assert is_checkmate(pos, 'b', set(), {})
 
 
+def test_knight_swaps_with_attacked_own_piece():
+    # Ладья на j9 не на одной линии с конём, и конь до неё не достаёт.
+    pos = board(n=((3, 3), ('w', 'N')), r=((4, 5), ('w', 'R')), far=((9, 8), ('w', 'R')))
+    assert compute_castle_moves(pos, 3, 3, 'w') == [(4, 5)]
+
+
 def test_swap_allowed_when_either_piece_attacks_the_other():
     # Конь слона не бьёт, но слон бьёт коня по свободной диагонали.
     pos = board(n=((3, 3), ('w', 'N')), b=((9, 9), ('w', 'B')))
     assert (9, 9) in compute_castle_moves(pos, 3, 3, 'w')
+
+
+def test_knight_castling_does_not_hang():
+    # Раньше проверка пути для коня никогда не доходила до цели и зависала навсегда.
+    pos = board(n=((0, 0), ('w', 'N')), r=((1, 2), ('w', 'R')))
+    result = []
+    t = threading.Thread(target=lambda: result.append(compute_castle_moves(pos, 0, 0, 'w')), daemon=True)
+    t.start()
+    t.join(timeout=5)
+    assert result == [[(1, 2)]]
 
 
 def test_sliders_swap_only_through_empty_squares():
